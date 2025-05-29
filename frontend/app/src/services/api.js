@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000', // Adjust if your backend runs on a different port
+  baseURL: 'http://localhost:8000', // 如果您的后端在不同的端口上运行，请调整此处的 baseURL
   headers: {
     'Content-Type': 'application/json',
   },

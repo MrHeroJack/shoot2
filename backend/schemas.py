@@ -12,4 +12,4 @@ class Item(ItemBase):
     id: int
 
     class Config:
-        orm_mode = True # Changed from from_attributes = True for compatibility with Pydantic v1
+        orm_mode = True # 从 from_attributes = True 更改而来，以兼容 Pydantic v1

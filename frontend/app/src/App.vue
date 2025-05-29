@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" style="width: 100px; height: auto;">
-    <h1>My Full-Stack App</h1>
+    <img alt="Vue 标志" src="./assets/logo.png" style="width: 100px; height: auto;">
+    <h1>我的全栈应用</h1>
     <ItemComponent />
   </div>
 </template>

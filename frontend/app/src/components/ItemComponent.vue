@@ -1,10 +1,10 @@
 <template>
   <div class="item-manager">
-    <h2>Items</h2>
+    <h2>项目列表</h2>
     <form @submit.prevent="addItem" class="item-form">
-      <input type="text" v-model="newItem.name" placeholder="Item name" required />
-      <input type="text" v-model="newItem.description" placeholder="Item description" />
-      <button type="submit">Add Item</button>
+      <input type="text" v-model="newItem.name" placeholder="项目名称" required />
+      <input type="text" v-model="newItem.description" placeholder="项目描述" />
+      <button type="submit">添加项目</button>
     </form>
     <ul class="item-list">
       <li v-for="item in items" :key="item.id" class="item-entry">
@@ -12,7 +12,7 @@
           <strong>{{ item.name }}</strong>
           <p v-if="item.description">{{ item.description }}</p>
         </div>
-        <button @click="deleteItem(item.id)" class="delete-btn">Delete</button>
+        <button @click="deleteItem(item.id)" class="delete-btn">删除</button>
       </li>
     </ul>
     <p v-if="error" class="error-message">{{ error }}</p>
@@ -42,33 +42,33 @@ export default {
         this.items = response.data;
       } catch (err) {
         console.error('Error fetching items:', err);
-        this.error = 'Failed to load items. Is the backend running?';
+        this.error = '加载项目失败。后端服务是否正在运行？';
       }
     },
     async addItem() {
       try {
         this.error = null;
         if (!this.newItem.name.trim()) {
-          this.error = "Item name cannot be empty.";
+          this.error = "项目名称不能为空。";
           return;
         }
         await api.createItem(this.newItem);
         this.newItem.name = '';
         this.newItem.description = '';
-        await this.fetchItems(); // Refresh list
+        await this.fetchItems(); // 刷新列表
       } catch (err) {
         console.error('Error adding item:', err);
-        this.error = 'Failed to add item.';
+        this.error = '添加项目失败。';
       }
     },
     async deleteItem(id) {
       try {
         this.error = null;
         await api.deleteItem(id);
-        await this.fetchItems(); // Refresh list
+        await this.fetchItems(); // 刷新列表
       } catch (err) {
         console.error('Error deleting item:', err);
-        this.error = 'Failed to delete item.';
+        this.error = '删除项目失败。';
       }
     },
   },

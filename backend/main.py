@@ -2,36 +2,36 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-# Make sure to import CORSMiddleware
+# 确保导入 CORSMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import crud, models, schemas # . represents current directory
+from . import crud, models, schemas # . 代表当前目录
 from .database import SessionLocal, engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Define allowed origins
-# Common Vue CLI dev server ports are 8080, 8081 etc.
-# Common Vite dev server ports are 5173, 3000 etc.
+# 定义允许的来源
+# 常见的 Vue CLI 开发服务器端口是 8080、8081 等。
+# 常见的 Vite 开发服务器端口是 5173、3000 等。
 origins = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
-    "http://localhost:8081", # In case 8080 is taken
+    "http://localhost:8081", # 万一 8080 端口被占用
     "http://127.0.0.1:8081",
-    "http://localhost:5173", # Default for Vite
+    "http://localhost:5173", # Vite 的默认端口
     "http://127.0.0.1:5173",
-    # Add other origins if needed, e.g., your deployed frontend URL
+    # 如果需要，添加其他来源，例如您部署的前端 URL
 ]
 
-# Add CORSMiddleware
+# 添加 CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Allows specific origins
+    allow_origins=origins,  # 允许特定的来源
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],  # 允许所有方法 (GET, POST 等)
+    allow_headers=["*"],  # 允许所有请求头
 )
 
 @app.post("/items/", response_model=schemas.Item)
@@ -47,49 +47,49 @@ def read_items_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(g
 def read_item_endpoint(item_id: int, db: Session = Depends(get_db)):
     db_item = crud.get_item(db, item_id=item_id)
     if db_item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="项目未找到") # 项目未找到
     return db_item
 
 @app.put("/items/{item_id}", response_model=schemas.Item)
 def update_item_endpoint(item_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)):
     db_item = crud.update_item(db, item_id=item_id, item=item)
     if db_item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="项目未找到") # 项目未找到
     return db_item
 
-@app.delete("/items/{item_id}", response_model=schemas.Item) # or response_model=None or some status message
+@app.delete("/items/{item_id}", response_model=schemas.Item) # 或者 response_model=None 或一些状态消息
 def delete_item_endpoint(item_id: int, db: Session = Depends(get_db)):
     db_item = crud.delete_item(db, item_id=item_id)
-    if db_item is None: # If delete_item returns None when not found (or check before delete)
-         pass # Return a 204 or appropriate response even if item not found, or 404 if it must exist
-    # Consider what to return. FastAPI default is JSON, so returning the deleted item is common,
-    # or a status message. If crud.delete_item now returns the deleted item (or None), this is fine.
-    # If it doesn't return the item (e.g. just status), adjust response_model or return a Response.
-    # For now, assuming crud.delete_item returns the deleted item or None if not found.
-    # To make it always return a 200 OK with the item or 404, we should ensure crud.delete_item
-    # either raises an error or returns the item consistently.
-    # Let's adjust to simply return a success message or the item.
-    # For this example, we'll assume crud.delete_item returns the item that was deleted.
-    # If crud.delete_item returns None because it wasn't found, we should raise 404.
-    # The current crud.delete_item returns the db_item (which could be None if not found before delete attempt)
-    # A better crud.delete_item would be:
+    if db_item is None: # 如果 delete_item 在未找到项目时返回 None (或在删除前检查)
+         pass # 即使未找到项目也返回 204 或适当的响应，如果项目必须存在则返回 404
+    # 考虑返回什么。FastAPI 默认为 JSON，因此返回已删除的项目是常见的做法，
+    # 或者返回状态消息。如果 crud.delete_item 现在返回已删除的项目 (或 None)，则这样可以。
+    # 如果它不返回项目 (例如仅状态)，则调整 response_model 或返回一个 Response。
+    # 目前，假设 crud.delete_item 返回已删除的项目，如果未找到则返回 None。
+    # 为了确保始终返回 200 OK 及项目，或 404，我们应确保 crud.delete_item
+    # 要么引发错误，要么一致地返回项目。
+    # 我们来调整一下，简单地返回成功消息或项目。
+    # 在此示例中，我们假设 crud.delete_item 返回已删除的项目。
+    # 如果 crud.delete_item 因未找到而返回 None，我们应该引发 404。
+    # 当前的 crud.delete_item 返回 db_item (如果在删除尝试前未找到，则可能为 None)
+    # 一个更好的 crud.delete_item 实现方式是：
     #   db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
     #   if not db_item: return None
     #   db.delete(db_item)
     #   db.commit()
     #   return db_item
-    # Given the current crud.delete_item:
-    deleted_item_info = crud.get_item(db, item_id) # Re-fetch to confirm or get data if not returned by delete
-                                                   # This is not ideal, crud.delete_item should return the item or signal not found
-                                                   # Let's assume crud.delete_item actually returns the item or None
-    # The crud.delete_item provided returns the item object *before* it's deleted if found, or None.
-    # This means if it was found and deleted, db_item is the object. If not found, it's None.
+    # 鉴于当前的 crud.delete_item：
+    deleted_item_info = crud.get_item(db, item_id) # 重新获取以确认或获取数据（如果删除操作未返回数据）
+                                                   # 这并不理想，crud.delete_item 应该返回项目或指示未找到的信号
+                                                   # 我们假设 crud.delete_item 确实返回项目或 None
+    # 提供的 crud.delete_item 在找到项目的情况下，返回删除前的项目对象，否则返回 None。
+    # 这意味着如果找到了并删除了，db_item 就是该对象。如果未找到，则为 None。
     if db_item is None:
-         raise HTTPException(status_code=404, detail="Item not found")
-    return db_item # Return the item that was deleted
+         raise HTTPException(status_code=404, detail="项目未找到") # 项目未找到
+    return db_item # 返回被删除的项目
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"你好": "世界"} # {"你好": "世界"}
 
-# Note: CORS middleware will be added later in the integration step.
+# 注意：CORS 中间件将在后续的集成步骤中添加。
